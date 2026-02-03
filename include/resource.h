@@ -4,5 +4,7 @@
 #define EDIT_FLAC_LEVEL    1003     // FLAC 圧縮レベル入力欄
 #define EDIT_OPUS_BITRATE  1004     // Opus ビットレート入力欄
 #define EDIT_WAV_BITDEPTH  1005    // WAV ビット深度入力欄
+#define IDC_PRESET_COMBO 2001
+#define IDC_SAVE_PRESET 2002
 #define IDOK               1        // OKボタン
 #define IDCANCEL           2        // Cancelボタン

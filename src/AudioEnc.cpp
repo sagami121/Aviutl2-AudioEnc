@@ -1,16 +1,21 @@
+#define NOMINMAX
 #include <windows.h>
 #include <vector>
 #include <string>
 #include <algorithm>
 #include <cstdio>
 #include <memory>
+#include <filesystem>
 
 #include "output2.h"
 #include "logger2.h"
 #include "module2.h"
 #include "../include/resource.h"
 
+#pragma comment(lib,"Comdlg32.lib")
+
 namespace {
+
     struct AudioConfig {
         int mp3_bitrate = 192;
         int samplerate = 44100;
@@ -19,151 +24,172 @@ namespace {
         int wav_bitdepth = 16;
     } g_config;
 
-    LOG_HANDLE* g_logger = nullptr;
-    HINSTANCE   g_module = nullptr;
+    HINSTANCE g_module = nullptr;
 
-    const wchar_t* const PLUGIN_NAME = L"‰¹ºo—Í";
-    const wchar_t* const FILE_FILTER =
-        L"WAV file (*.wav)\0*.wav\0"
-        L"MP3 file (*.mp3)\0*.mp3\0"
-        L"FLAC file (*.flac)\0*.flac\0"
-        L"Opus file (*.opus)\0*.opus\0\0";
+    const wchar_t* const INFO_STR = L"AudioEnc v1.2";
+    const wchar_t* PLUGIN_NAME = L"‰¹ºo—Í";
+    const wchar_t* FILE_FILTER =
+        L"WAV (*.wav)\0*.wav\0MP3 (*.mp3)\0*.mp3\0FLAC (*.flac)\0*.flac\0Opus (*.opus)\0*.opus\0\0";
 
-    const wchar_t* const INFO_STR = L"AudioEnc v1.1";
-
-    void Log(const std::wstring& msg) {
-        if (g_logger && g_logger->info) {
-            g_logger->info(g_logger, msg.c_str());
-        }
+    std::wstring GetPresetDir() {
+        wchar_t path[MAX_PATH];
+        GetModuleFileNameW(g_module, path, MAX_PATH);
+        auto dir = std::filesystem::path(path).parent_path() / L"AudioEnc_Presets";
+        std::filesystem::create_directories(dir);
+        return dir.wstring();
     }
 
-    struct PipeDeleter {
-        void operator()(FILE* fp) const { if (fp) _pclose(fp); }
-    };
-    using unique_pipe = std::unique_ptr<FILE, PipeDeleter>;
+    void SavePresetFile(const wchar_t* path) {
+        WritePrivateProfileStringW(L"audio", L"mp3", std::to_wstring(g_config.mp3_bitrate).c_str(), path);
+        WritePrivateProfileStringW(L"audio", L"sr", std::to_wstring(g_config.samplerate).c_str(), path);
+        WritePrivateProfileStringW(L"audio", L"flac", std::to_wstring(g_config.flac_level).c_str(), path);
+        WritePrivateProfileStringW(L"audio", L"opus", std::to_wstring(g_config.opus_bitrate).c_str(), path);
+        WritePrivateProfileStringW(L"audio", L"wav", std::to_wstring(g_config.wav_bitdepth).c_str(), path);
+    }
+
+    void LoadPreset(const std::wstring& name) {
+        auto p = GetPresetDir() + L"\\" + name + L".preset";
+        g_config.mp3_bitrate = GetPrivateProfileIntW(L"audio", L"mp3", 192, p.c_str());
+        g_config.samplerate = GetPrivateProfileIntW(L"audio", L"sr", 44100, p.c_str());
+        g_config.flac_level = GetPrivateProfileIntW(L"audio", L"flac", 5, p.c_str());
+        g_config.opus_bitrate = GetPrivateProfileIntW(L"audio", L"opus", 128, p.c_str());
+        g_config.wav_bitdepth = GetPrivateProfileIntW(L"audio", L"wav", 16, p.c_str());
+    }
+
 }
 
-INT_PTR CALLBACK ConfigDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    switch (msg) {
-    case WM_INITDIALOG: {
-        SetDlgItemInt(hwnd, EDIT_MP3_BITRATE, g_config.mp3_bitrate, FALSE);
-        SetDlgItemInt(hwnd, EDIT_SAMPLE_RATE, g_config.samplerate, FALSE);
-        SetDlgItemInt(hwnd, EDIT_FLAC_LEVEL, g_config.flac_level, FALSE);
-        SetDlgItemInt(hwnd, EDIT_OPUS_BITRATE, g_config.opus_bitrate, FALSE);
-        SetDlgItemInt(hwnd, EDIT_WAV_BITDEPTH, g_config.wav_bitdepth, FALSE);
+INT_PTR CALLBACK ConfigDlgProc(HWND h, UINT m, WPARAM w, LPARAM) {
+
+    switch (m) {
+
+    case WM_INITDIALOG:
+
+        for (auto& p : std::filesystem::directory_iterator(GetPresetDir()))
+            if (p.path().extension() == L".preset")
+                SendDlgItemMessageW(h, IDC_PRESET_COMBO, CB_ADDSTRING, 0,
+                    (LPARAM)p.path().stem().c_str());
+
+        SetDlgItemInt(h, EDIT_MP3_BITRATE, g_config.mp3_bitrate, FALSE);
+        SetDlgItemInt(h, EDIT_SAMPLE_RATE, g_config.samplerate, FALSE);
+        SetDlgItemInt(h, EDIT_FLAC_LEVEL, g_config.flac_level, FALSE);
+        SetDlgItemInt(h, EDIT_OPUS_BITRATE, g_config.opus_bitrate, FALSE);
+        SetDlgItemInt(h, EDIT_WAV_BITDEPTH, g_config.wav_bitdepth, FALSE);
+
+        return TRUE;
+
+    case WM_COMMAND:
+
+        if (LOWORD(w) == IDC_SAVE_PRESET) {
+
+            OPENFILENAMEW ofn{};
+            wchar_t file[MAX_PATH] = L"audio.preset";
+
+            ofn.lStructSize = sizeof(ofn);
+            ofn.hwndOwner = h;
+            ofn.lpstrFilter = L"Preset (*.preset)\0*.preset\0";
+            ofn.lpstrFile = file;
+            ofn.nMaxFile = MAX_PATH;
+            ofn.lpstrInitialDir = GetPresetDir().c_str();
+            ofn.Flags = OFN_EXPLORER | OFN_OVERWRITEPROMPT;
+            ofn.lpstrDefExt = L"preset";
+
+            if (GetSaveFileNameW(&ofn)) {
+
+                g_config.mp3_bitrate = GetDlgItemInt(h, EDIT_MP3_BITRATE, nullptr, FALSE);
+                g_config.samplerate = GetDlgItemInt(h, EDIT_SAMPLE_RATE, nullptr, FALSE);
+                g_config.flac_level = GetDlgItemInt(h, EDIT_FLAC_LEVEL, nullptr, FALSE);
+                g_config.opus_bitrate = GetDlgItemInt(h, EDIT_OPUS_BITRATE, nullptr, FALSE);
+                g_config.wav_bitdepth = GetDlgItemInt(h, EDIT_WAV_BITDEPTH, nullptr, FALSE);
+
+                SavePresetFile(file);
+
+                SendDlgItemMessageW(h, IDC_PRESET_COMBO, CB_ADDSTRING, 0,
+                    (LPARAM)std::filesystem::path(file).stem().c_str());
+            }
+        }
+
+        if (LOWORD(w) == IDC_PRESET_COMBO && HIWORD(w) == CBN_SELCHANGE) {
+
+            wchar_t name[64];
+            GetDlgItemTextW(h, IDC_PRESET_COMBO, name, 64);
+            LoadPreset(name);
+
+            SetDlgItemInt(h, EDIT_MP3_BITRATE, g_config.mp3_bitrate, FALSE);
+            SetDlgItemInt(h, EDIT_SAMPLE_RATE, g_config.samplerate, FALSE);
+            SetDlgItemInt(h, EDIT_FLAC_LEVEL, g_config.flac_level, FALSE);
+            SetDlgItemInt(h, EDIT_OPUS_BITRATE, g_config.opus_bitrate, FALSE);
+            SetDlgItemInt(h, EDIT_WAV_BITDEPTH, g_config.wav_bitdepth, FALSE);
+        }
+
+        if (LOWORD(w) == IDOK) EndDialog(h, IDOK);
+        if (LOWORD(w) == IDCANCEL) EndDialog(h, IDCANCEL);
+
         return TRUE;
     }
 
-    case WM_COMMAND:
-        switch (LOWORD(wParam)) {
-        case IDOK: {
-            g_config.mp3_bitrate = GetDlgItemInt(hwnd, EDIT_MP3_BITRATE, nullptr, FALSE);
-            g_config.samplerate = GetDlgItemInt(hwnd, EDIT_SAMPLE_RATE, nullptr, FALSE);
-            g_config.flac_level = GetDlgItemInt(hwnd, EDIT_FLAC_LEVEL, nullptr, FALSE);
-            g_config.opus_bitrate = GetDlgItemInt(hwnd, EDIT_OPUS_BITRATE, nullptr, FALSE);
-            g_config.wav_bitdepth = GetDlgItemInt(hwnd, EDIT_WAV_BITDEPTH, nullptr, FALSE);
-            EndDialog(hwnd, IDOK);
-            return TRUE;
-        }
-        case IDCANCEL:
-            EndDialog(hwnd, IDCANCEL);
-            return TRUE;
-        }
-        break;
-    }
     return FALSE;
 }
-bool ConfigFunc(HWND hwnd, HINSTANCE hinst) {
-    return DialogBox(hinst, MAKEINTRESOURCE(IDD_CONFIG_DIALOG), hwnd, ConfigDlgProc) == IDOK;
+
+bool ConfigFunc(HWND h, HINSTANCE i) {
+    return DialogBox(i, MAKEINTRESOURCE(IDD_CONFIG_DIALOG), h, ConfigDlgProc) == IDOK;
 }
 
 bool OutputFunc(OUTPUT_INFO* oi) {
-    if (!oi) return false;
 
-    Log(L"Encoding process started...");
+    char path[MAX_PATH];
+    WideCharToMultiByte(CP_ACP, 0, oi->savefile, -1, path, MAX_PATH, nullptr, nullptr);
 
-    std::wstring savePath = oi->savefile;
-    auto to_lower = [](std::wstring s) {
-        std::transform(s.begin(), s.end(), s.begin(), ::towlower);
-        return s;
-        };
-    std::wstring lowerPath = to_lower(savePath);
+    std::string cmd = "ffmpeg -y -f f32le -ar " + std::to_string(g_config.samplerate)
+        + " -ac " + std::to_string(oi->audio_ch) + " -i - ";
 
-    char pathA[MAX_PATH];
-    if (!WideCharToMultiByte(CP_ACP, 0, savePath.c_str(), -1, pathA, MAX_PATH, nullptr, nullptr)) {
-        Log(L"Error: Failed to convert file path.");
-        return false;
-    }
+    std::wstring ext = oi->savefile;
+    std::transform(ext.begin(), ext.end(), ext.begin(), towlower);
 
-    std::string cmd = "ffmpeg -y -f f32le -ar " + std::to_string(g_config.samplerate) +
-        " -ac " + std::to_string(oi->audio_ch) + " -i - ";
-
-    if (lowerPath.find(L".mp3") != std::wstring::npos) {
+    if (ext.find(L".mp3") != std::wstring::npos)
         cmd += "-c:a libmp3lame -b:a " + std::to_string(g_config.mp3_bitrate) + "k ";
-    }
-    else if (lowerPath.find(L".opus") != std::wstring::npos) {
+    else if (ext.find(L".opus") != std::wstring::npos)
         cmd += "-c:a libopus -b:a " + std::to_string(g_config.opus_bitrate) + "k ";
-    }
-    else if (lowerPath.find(L".flac") != std::wstring::npos) {
+    else if (ext.find(L".flac") != std::wstring::npos)
         cmd += "-c:a flac -compression_level " + std::to_string(g_config.flac_level) + " ";
-    }
     else {
-        std::string pcm_fmt = (g_config.wav_bitdepth == 24) ? "pcm_s24le" : "pcm_s16le";
-        cmd += "-c:a " + pcm_fmt + " ";
+        if (g_config.wav_bitdepth == 32) cmd += "-c:a pcm_f32le ";
+        else if (g_config.wav_bitdepth == 24) cmd += "-c:a pcm_s24le ";
+        else cmd += "-c:a pcm_s16le ";
     }
 
-    cmd += "\"" + std::string(pathA) + "\"";
+    cmd += "\"" + std::string(path) + "\"";
 
-    unique_pipe fp(_popen(cmd.c_str(), "wb"));
-    if (!fp) {
-        Log(L"Error: Failed to launch ffmpeg. Please check your system PATH.");
-        return false;
+    auto fp = _popen(cmd.c_str(), "wb");
+    if (!fp) return false;
+
+    constexpr int CHUNK = 4096;
+    for (int i = 0; i < oi->audio_n; i += CHUNK) {
+        int n = std::min(CHUNK, oi->audio_n - i);
+        int r = 0;
+        float* buf = (float*)oi->func_get_audio(i, n, &r, 3);
+        if (buf && r > 0) fwrite(buf, sizeof(float), r * oi->audio_ch, fp);
     }
 
-    constexpr int CHUNK_SIZE = 44100;
-    for (int i = 0; i < oi->audio_n; i += CHUNK_SIZE) {
-        int n = (std::min)(CHUNK_SIZE, oi->audio_n - i);
-        int read_samples = 0;
-        float* audioBuf = static_cast<float*>(oi->func_get_audio(i, n, &read_samples, 3));
-
-        if (audioBuf && read_samples > 0) {
-            size_t elements_to_write = static_cast<size_t>(read_samples) * oi->audio_ch;
-            if (fwrite(audioBuf, sizeof(float), elements_to_write, fp.get()) < elements_to_write) {
-                Log(L"Error: Pipe write failed.");
-                return false;
-            }
-        }
-    }
-
-    fp.reset();
-    Log(L"Output completed successfully.");
+    _pclose(fp);
     return true;
 }
 
 extern "C" {
 
     __declspec(dllexport) OUTPUT_PLUGIN_TABLE* GetOutputPluginTable() {
-        static OUTPUT_PLUGIN_TABLE table = {};
-        table.flag = OUTPUT_PLUGIN_TABLE::FLAG_AUDIO;
-        table.name = PLUGIN_NAME;
-        table.filefilter = FILE_FILTER;
-        table.information = INFO_STR;
-        table.func_output = OutputFunc;
-        table.func_config = ConfigFunc;
-        table.func_get_config_text = nullptr; // •K{‚Å‚Í‚È‚¢
-        return &table;
+        static OUTPUT_PLUGIN_TABLE t{};
+        t.flag = OUTPUT_PLUGIN_TABLE::FLAG_AUDIO;
+        t.name = PLUGIN_NAME;
+        t.filefilter = FILE_FILTER;
+        t.information = INFO_STR;   
+        t.func_output = OutputFunc;
+        t.func_config = ConfigFunc;
+        return &t;
     }
 
-    __declspec(dllexport) void InitializeLogger(LOG_HANDLE* logger) {
-        g_logger = logger;
-    }
+}
 
-} 
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved) {
-    if (ul_reason_for_call == DLL_PROCESS_ATTACH) {
-        g_module = hModule;
-        DisableThreadLibraryCalls(hModule);
-    }
+BOOL APIENTRY DllMain(HMODULE h, DWORD r, LPVOID) {
+    if (r == DLL_PROCESS_ATTACH) g_module = h;
     return TRUE;
 }
