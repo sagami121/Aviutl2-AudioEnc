@@ -28,7 +28,7 @@
     <ClInclude Include="include\logger2.h" />
     <ClInclude Include="include\module2.h" />
     <ClInclude Include="include\output2.h" />
-    <ClInclude Include="include\resource.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>

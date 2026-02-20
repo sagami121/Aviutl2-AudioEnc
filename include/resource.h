@@ -1,10 +1,14 @@
-#define IDD_CONFIG_DIALOG 101       // ƒ_ƒCƒAƒƒOID
-#define EDIT_MP3_BITRATE   1001     // MP3ƒrƒbƒgƒŒ[ƒg“ü—Í—“
-#define EDIT_SAMPLE_RATE   1002     // ƒTƒ“ƒvƒŠƒ“ƒOƒŒ[ƒg“ü—Í—“
-#define EDIT_FLAC_LEVEL    1003     // FLAC ˆ³kƒŒƒxƒ‹“ü—Í—“
-#define EDIT_OPUS_BITRATE  1004     // Opus ƒrƒbƒgƒŒ[ƒg“ü—Í—“
-#define EDIT_WAV_BITDEPTH  1005    // WAV ƒrƒbƒg[“x“ü—Í—“
-#define IDC_PRESET_COMBO 2001
-#define IDC_SAVE_PRESET 2002
-#define IDOK               1        // OKƒ{ƒ^ƒ“
-#define IDCANCEL           2        // Cancelƒ{ƒ^ƒ“
+ï»¿#pragma once
+
+#define IDD_CONFIG_DIALOG 101
+
+#define IDC_SAMPLE_RATE   1002
+#define IDC_MP3_BITRATE   1001
+#define IDC_OPUS_BITRATE  1004
+#define IDC_OGG_BITRATE   1006
+
+#define EDIT_FLAC_LEVEL   1003
+#define EDIT_WAV_BITDEPTH 1005
+
+#define IDC_PRESET_COMBO  2001
+#define IDC_SAVE_PRESET   2002
