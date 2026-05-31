@@ -29,7 +29,7 @@ namespace {
     HINSTANCE g_module = nullptr;
 	std::wstring g_iniPath;
 
-    const wchar_t* INFO_STR = L"AudioEnc v1.3 KeepType";
+    const wchar_t* INFO_STR = L"AudioEnc v1.3";
     const wchar_t* PLUGIN_NAME = L"音声出力";
 
     const wchar_t* FILE_FILTER =
@@ -254,6 +254,9 @@ namespace {
 
 } 
 
+LPCWSTR GetConfigText() {
+    return L"出力形式はファイル名の拡張子から、拡張子が無い場合はファイルの種類から決まります。";
+}
 
 extern "C" {
     __declspec(dllexport) OUTPUT_PLUGIN_TABLE* GetOutputPluginTable() {
@@ -264,6 +267,7 @@ extern "C" {
         t.information = INFO_STR;
         t.func_output = OutputFunc;
         t.func_config = ConfigFunc;
+        t.func_get_config_text = GetConfigText;
 
         return &t;
     }
