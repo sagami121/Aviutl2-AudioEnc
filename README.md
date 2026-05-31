@@ -10,6 +10,7 @@ wingetでインストール:
 ```bash
 winget install ffmpeg
 ```
+ffmpegのインストール後、PCを再起動してください。
 
 ## ライセンス
 MITライセンス
