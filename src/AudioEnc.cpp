@@ -8,7 +8,7 @@
 
 #include "output2.h"
 #include "module2.h"
-#include "../include/resource.h"
+#include "resource.h"
 
 #pragma comment(lib,"Comdlg32.lib")
 
@@ -26,7 +26,7 @@ namespace {
 
     HINSTANCE g_module = nullptr;
 
-    const wchar_t* INFO_STR = L"AudioEnc v1.3";
+    const wchar_t* INFO_STR = L"AudioEnc v1.3 KeepType";
     const wchar_t* PLUGIN_NAME = L"âπê∫èoóÕ";
 
     const wchar_t* FILE_FILTER =
