@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <cstdio>
 #include <filesystem>
+#include <shlwapi.h>
 
 #include "output2.h"
 #include "module2.h"
 #include "resource.h"
 
 #pragma comment(lib,"Comdlg32.lib")
+#pragma comment(lib, "shlwapi.lib")
 
 namespace {
 
@@ -25,6 +27,7 @@ namespace {
     } g_config;
 
     HINSTANCE g_module = nullptr;
+	std::wstring g_iniPath;
 
     const wchar_t* INFO_STR = L"AudioEnc v1.3 KeepType";
     const wchar_t* PLUGIN_NAME = L"音声出力";
@@ -40,10 +43,45 @@ namespace {
     const int kBitrates[] = { 64, 80, 96, 128, 160, 192, 256, 320 };
 
 
+    /// <summary>
+    /// DLLの場所から.iniファイルのパスを生成する
+    /// </summary>
+	/// <description>
+	/// .iniファイルが存在しない場合、同じ場所に作成を試みる。作成できない場合はC:\ProgramData\aviutl2\Plugin\AudioEnc.iniを使用する。
+	/// </description>
+    /// <returns>.iniファイルの場所</returns>
+
+    std::wstring GetIniPathFromDll()
+    {
+        wchar_t buffer[MAX_PATH] = { 0 };
+		std::wstring defaultPath = L"C:\\ProgramData\\aviutl2\\Plugin\\AudioEnc.ini";
+
+        // DLLのフルパスを取得し拡張子を .ini に書き換える
+        if (GetModuleFileNameW(g_module, buffer, MAX_PATH) == 0) {
+            // 取得に失敗した場合、ProgramDataを指定する
+			return defaultPath;
+        }
+        PathRenameExtensionW(buffer, L".ini");
+
+        // 設定ファイルが既に存在するか確認し、存在しない場合は作成できるか確認する
+        if (!std::filesystem::exists(buffer)) {
+            // 設定ファイルを作成できるか確認するため、試しに空のファイルを作成する
+            HANDLE hFile = CreateFileW(buffer, GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                // 作成に成功したので処理を継続
+                CloseHandle(hFile);
+			}
+			else {
+				// 設定ファイルの作成に失敗した場合、ProgramDataを指定する
+                return defaultPath;
+            }
+		}
+
+        return std::wstring(buffer);
+    }
+
     std::filesystem::path GetIniPath() {
-        auto dir = std::filesystem::absolute(L"C:\\ProgramData\\aviutl2\\Plugin");
-        if (!std::filesystem::exists(dir)) std::filesystem::create_directories(dir);
-        return dir / L"AudioEnc.ini";
+        return g_iniPath;
     }
 
 
@@ -227,11 +265,16 @@ extern "C" {
         t.func_output = OutputFunc;
         t.func_config = ConfigFunc;
 
+        return &t;
+    }
+
+    __declspec(dllexport) bool InitializePlugin(DWORD version) {
+        g_iniPath = GetIniPathFromDll();
         wchar_t last[128]{};
         GetPrivateProfileStringW(L"Settings", L"LastPreset", L"default", last, 128, GetIniPath().c_str());
         LoadFromIni(last);
 
-        return &t;
+        return true;
     }
 }
 
@@ -242,3 +285,4 @@ BOOL APIENTRY DllMain(HMODULE h, DWORD r, LPVOID) {
     }
     return TRUE;
 }
+
