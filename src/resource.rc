@@ -1,19 +1,19 @@
-#include <windows.h>
+Ôªø#include <windows.h>
 #include "../include/resource.h"
 
 LANGUAGE 0x11, 0x01
-#pragma code_page(932)
+#pragma code_page(65001)
 
 IDD_CONFIG_DIALOG DIALOGEX 0,0,200,185
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "è⁄ç◊ê›íË"
+CAPTION "Ë©≥Á¥∞Ë®≠ÂÆö"
 FONT 9, "Yu Gothic UI"
 BEGIN
-    LTEXT "ÉvÉäÉZÉbÉg:",-1,10,10,40,8
+    LTEXT "„Éó„É™„Çª„ÉÉ„Éà:",-1,10,10,40,8
     COMBOBOX IDC_PRESET_COMBO,55,8,90,100,CBS_DROPDOWN | WS_VSCROLL
-    PUSHBUTTON "ï€ë∂",IDC_SAVE_PRESET,151,7,35,14
+    PUSHBUTTON "‰øùÂ≠ò",IDC_SAVE_PRESET,151,7,35,14
 
-    LTEXT "WAV ÉrÉbÉgê[ìx:",-1,10,30,60,8
+    LTEXT "WAV „Éì„ÉÉ„ÉàÊ∑±Â∫¶:",-1,10,30,60,8
     EDITTEXT EDIT_WAV_BITDEPTH,80,28,40,14,ES_NUMBER
     LTEXT "bit",-1,125,30,20,8
 
@@ -31,13 +31,13 @@ BEGIN
     COMBOBOX IDC_OGG_BITRATE,45,85,50,100,CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "kbps",-1,100,87,20,8
 
-    LTEXT "FLAC à≥èk:",-1,10,110,50,8
+    LTEXT "FLAC ÂúßÁ∏Æ:",-1,10,110,50,8
     EDITTEXT EDIT_FLAC_LEVEL,70,108,40,14,ES_NUMBER
 
-    LTEXT "ÉTÉìÉvÉäÉìÉO:",-1,10,130,50,8
+    LTEXT "„Çµ„É≥„Éó„É™„É≥„Ç∞:",-1,10,130,50,8
     COMBOBOX IDC_SAMPLE_RATE,70,128,70,100,CBS_DROPDOWNLIST | WS_VSCROLL
     LTEXT "Hz",-1,145,130,20,8
 
     DEFPUSHBUTTON "OK",IDOK,55,160,50,14
-    PUSHBUTTON "ÉLÉÉÉìÉZÉã",IDCANCEL,112,160,60,14
+    PUSHBUTTON "„Ç≠„É£„É≥„Çª„É´",IDCANCEL,112,160,60,14
 END

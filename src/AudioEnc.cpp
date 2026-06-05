@@ -1,4 +1,4 @@
-#define NOMINMAX
+ï»¿#define NOMINMAX
 #include <windows.h>
 #include <vector>
 #include <string>
@@ -29,8 +29,8 @@ namespace {
     HINSTANCE g_module = nullptr;
 	std::wstring g_iniPath;
 
-	const wchar_t* INFO_STR = L"AudioEnc v1.3";
-	const wchar_t* PLUGIN_NAME = L"‰¹ºo—Í";
+	const wchar_t* INFO_STR = L"AudioEnc v1.4";
+	const wchar_t* PLUGIN_NAME = L"éŸ³å£°å‡ºåŠ›";
 
 	const wchar_t* FILE_FILTER =
 		L"WAV (*.wav)\0*.wav\0"
@@ -44,19 +44,19 @@ namespace {
 
 
 	/// <summary>
-	/// DLL‚ÌêŠ‚©‚ç.iniƒtƒ@ƒCƒ‹‚ÌƒpƒX‚ğ¶¬‚·‚é
+	/// DLLã®å ´æ‰€ã‹ã‚‰.iniãƒ•ã‚¡ã‚¤ãƒ«ã®ãƒ‘ã‚¹ã‚’ç”Ÿæˆã™ã‚‹
 	/// </summary>
 	/// <description>
-	/// .iniƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚È‚¢ê‡A“¯‚¶êŠ‚Éì¬‚ğ‚İ‚éBì¬‚Å‚«‚È‚¢ê‡‚ÍC:\ProgramData\aviutl2\Plugin\AudioEnc.ini‚ğg—p‚·‚éB
+	/// .iniãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ãªã„å ´åˆã€åŒã˜å ´æ‰€ã«ä½œæˆã‚’è©¦ã¿ã‚‹ã€‚ä½œæˆã§ããªã„å ´åˆã¯C:\ProgramData\aviutl2\Plugin\AudioEnc.iniã‚’ä½¿ç”¨ã™ã‚‹ã€‚
 	/// </description>
-	/// <returns>.iniƒtƒ@ƒCƒ‹‚ÌêŠ</returns>
+	/// <returns>.iniãƒ•ã‚¡ã‚¤ãƒ«ã®å ´æ‰€</returns>
 	std::wstring GetIniPathFromDll()
 	{
 		std::wstring buffer(MAX_PATH, L'\0');
 		std::wstring defaultPath = L"C:\\ProgramData\\aviutl2\\Plugin\\AudioEnc.ini";
 
-		// DLL‚Ìƒtƒ‹ƒpƒX‚ğæ“¾‚µŠg’£q‚ğ .ini ‚É‘‚«Š·‚¦‚é
-		// ¸”s‚µ‚½ê‡‚ÍƒfƒtƒHƒ‹ƒgƒpƒX‚ğ•Ô‚·
+		// DLLã®ãƒ•ãƒ«ãƒ‘ã‚¹ã‚’å–å¾—ã—æ‹¡å¼µå­ã‚’ .ini ã«æ›¸ãæ›ãˆã‚‹
+		// å¤±æ•—ã—ãŸå ´åˆã¯ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆãƒ‘ã‚¹ã‚’è¿”ã™
 		if (GetModuleFileNameW(g_module, buffer.data(), (DWORD)buffer.size()) == 0) {
 			return defaultPath;
 		}
@@ -64,7 +64,7 @@ namespace {
 			return defaultPath;
 		}
 
-		// İ’èƒtƒ@ƒCƒ‹‚ªŠù‚É‘¶İ‚·‚é‚©Šm”F‚µA‘¶İ‚µ‚È‚¢ê‡‚Íì¬‚Å‚«‚é‚©Šm”F‚·‚é
+		// è¨­å®šãƒ•ã‚¡ã‚¤ãƒ«ãŒæ—¢ã«å­˜åœ¨ã™ã‚‹ã‹ç¢ºèªã—ã€å­˜åœ¨ã—ãªã„å ´åˆã¯ä½œæˆã§ãã‚‹ã‹ç¢ºèªã™ã‚‹
 		if (!std::filesystem::exists(buffer.data())) {
 			HANDLE hFile = CreateFileW(buffer.data(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
 			if (hFile != INVALID_HANDLE_VALUE) {
@@ -188,7 +188,7 @@ namespace {
 			if (LOWORD(w) == IDC_SAVE_PRESET) {
 				SyncUItoConfig(h);
 				SaveToIni(g_config.current_preset);
-				MessageBoxW(h, L"•Û‘¶‚µ‚Ü‚µ‚½B", L"AudioEnc", MB_OK);
+				MessageBoxW(h, L"ä¿å­˜ã—ã¾ã—ãŸã€‚", L"AudioEnc", MB_OK);
 				return TRUE;
 			}
 			if (LOWORD(w) == IDOK) {
@@ -208,7 +208,7 @@ namespace {
 	}
 
 	bool OutputFunc(OUTPUT_INFO* oi) {
-		// ffmpeg‚Ì‹N“®ƒ`ƒFƒbƒN
+		// ffmpegã®èµ·å‹•ãƒã‚§ãƒƒã‚¯
 		{
 			STARTUPINFOW si = { sizeof(si) };
 			PROCESS_INFORMATION pi = { 0 };
@@ -222,12 +222,12 @@ namespace {
 				CloseHandle(pi.hThread);
 			}
 			else {
-				MessageBoxW(nullptr, L"ffmpeg ‚ªŒ©‚Â‚©‚è‚Ü‚¹‚ñB", L"AudioEnc", MB_ICONERROR);
+				MessageBoxW(nullptr, L"ffmpeg ãŒè¦‹ã¤ã‹ã‚Šã¾ã›ã‚“ã€‚", L"AudioEnc", MB_ICONERROR);
 				return false;
 			}
 		}
 
-		// ƒRƒ}ƒ“ƒhƒ‰ƒCƒ“‚Ì¶¬
+		// ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã®ç”Ÿæˆ
 		char out[MAX_PATH * 3]{};
 		WideCharToMultiByte(CP_UTF8, 0, oi->savefile, -1, out, sizeof(out), nullptr, nullptr);
 
@@ -253,15 +253,15 @@ namespace {
 		if (!cmd.empty()) {
 			int sizeNeeded = MultiByteToWideChar(CP_UTF8, 0, cmd.c_str(), -1, NULL, 0);
 			if (sizeNeeded > 0) {
-				wcmd.resize(sizeNeeded - 1); // ƒkƒ‹•¶š•ª‚ğˆø‚¢‚ÄƒŠƒTƒCƒY
+				wcmd.resize(sizeNeeded - 1); // ãƒŒãƒ«æ–‡å­—åˆ†ã‚’å¼•ã„ã¦ãƒªã‚µã‚¤ã‚º
 				MultiByteToWideChar(CP_UTF8, 0, cmd.c_str(), -1, &wcmd[0], sizeNeeded);
 			}
 		}
 
-		// ƒpƒCƒv‚Ìì¬‚ÆƒvƒƒZƒX‚Ì‹N“®
+		// ãƒ‘ã‚¤ãƒ—ã®ä½œæˆã¨ãƒ—ãƒ­ã‚»ã‚¹ã®èµ·å‹•
 		HANDLE hPipeRead = NULL;
 		HANDLE hPipeWrite = NULL;
-		SECURITY_ATTRIBUTES saAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE }; // ƒnƒ“ƒhƒ‹Œp³‚ğ‹–‰Â
+		SECURITY_ATTRIBUTES saAttr = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE }; // ãƒãƒ³ãƒ‰ãƒ«ç¶™æ‰¿ã‚’è¨±å¯
 		if (!CreatePipe(&hPipeRead, &hPipeWrite, &saAttr, 0)) {
 			return false;
 		}
@@ -281,7 +281,7 @@ namespace {
 			return false;
 		}
 
-		// o—ÍŠJn
+		// å‡ºåŠ›é–‹å§‹
 		constexpr int CHUNK = 4096;
 		bool isAborted = false;
 
@@ -299,14 +299,14 @@ namespace {
 				size_t bytesToWrite = (size_t)r * oi->audio_ch * sizeof(float);
 
 				if (!WriteFile(hPipeWrite, buf, (DWORD)bytesToWrite, &bytesWritten, NULL)) {
-					// ffmpeg ‘¤‚ª“r’†‚Å—‚¿‚½A‚Ü‚½‚ÍI—¹‚µ‚½ê‡
+					// ffmpeg å´ãŒé€”ä¸­ã§è½ã¡ãŸã€ã¾ãŸã¯çµ‚äº†ã—ãŸå ´åˆ
 					break;
 				}
 			}
 		}
 		CloseHandle(hPipeWrite);
 
-		// ƒvƒƒZƒX‚ÌI—¹ˆ—‚ÆƒNƒŠ[ƒ“ƒAƒbƒv
+		// ãƒ—ãƒ­ã‚»ã‚¹ã®çµ‚äº†å‡¦ç†ã¨ã‚¯ãƒªãƒ¼ãƒ³ã‚¢ãƒƒãƒ—
 		if (!isAborted) {
 			WaitForSingleObject(pi.hProcess, INFINITE);
 		}
@@ -321,7 +321,7 @@ namespace {
 }
 
 LPCWSTR GetConfigText() {
-    return L"o—ÍŒ`®‚Íƒtƒ@ƒCƒ‹–¼‚ÌŠg’£q‚©‚çAŠg’£q‚ª–³‚¢ê‡‚Íƒtƒ@ƒCƒ‹‚Ìí—Ş‚©‚çŒˆ‚Ü‚è‚Ü‚·B";
+    return L"å‡ºåŠ›å½¢å¼ã¯ãƒ•ã‚¡ã‚¤ãƒ«åã®æ‹¡å¼µå­ã‹ã‚‰ã€æ‹¡å¼µå­ãŒç„¡ã„å ´åˆã¯ãƒ•ã‚¡ã‚¤ãƒ«ã®ç¨®é¡ã‹ã‚‰æ±ºã¾ã‚Šã¾ã™ã€‚";
 }
 
 extern "C" {
@@ -355,4 +355,5 @@ BOOL APIENTRY DllMain(HMODULE h, DWORD r, LPVOID) {
     }
     return TRUE;
 }
+
 

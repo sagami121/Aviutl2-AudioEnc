@@ -1,187 +1,188 @@
-//----------------------------------------------------------------------------------
-//	�X�N���v�g���W���[�� �w�b�_�[�t�@�C�� for AviUtl ExEdit2
-//	By �j�d�m����
+﻿//----------------------------------------------------------------------------------
+//	スクリプトモジュール ヘッダーファイル for AviUtl ExEdit2
+//	By ＫＥＮくん
 //----------------------------------------------------------------------------------
 
-//	�X�N���v�g���W���[���͉��L�̊֐����O�����J����ƌĂяo����܂�
+//	スクリプトモジュールは下記の関数を外部公開すると呼び出されます
 //
-//	�X�N���v�g���W���[���\���̂̃|�C���^��n���֐� (�K�{)
+//	スクリプトモジュール構造体のポインタを渡す関数 (必須)
 //		SCRIPT_MODULE_TABLE* GetScriptModuleTable(void)
 // 
-//	�v���O�C��DLL�������֐� (�C��)
-//		bool InitializePlugin(DWORD version) ��version�͖{�̂̃o�[�W�����ԍ�
+//	プラグインDLL初期化関数 (任意)
+//		bool InitializePlugin(DWORD version) ※versionは本体のバージョン番号
 // 
-//	�v���O�C��DLL�I���֐� (�C��)
+//	プラグインDLL終了関数 (任意)
 //		void UninitializePlugin()
 // 
-//	���O�o�͋@�\�������֐� (�C��) ��logger2.h
+//	ログ出力機能初期化関数 (任意) ※logger2.h
 //		void InitializeLogger(LOG_HANDLE* logger)
 
 //----------------------------------------------------------------------------------
 
-// �X�N���v�g���W���[�������\����
+// スクリプトモジュール引数構造体
 struct SCRIPT_MODULE_PARAM {
-	// �����̐����擾����
-	// �߂�l		: �����̐�
+	// 引数の数を取得する
+	// 戻り値		: 引数の数
 	int (*get_param_num)();
 
-	// �����𐮐��Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数を整数で取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	int (*get_param_int)(int index);
 
-	// �����𕂓������_�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数を浮動小数点で取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	double (*get_param_double)(int index);
 
-	// �����𕶎���(UTF-8)�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��nullptr)
+	// 引数を文字列(UTF-8)で取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合はnullptr)
 	LPCSTR(*get_param_string)(int index);
 
-	// �������f�[�^�̃|�C���^�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��nullptr)
+	// 引数をデータのポインタで取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合はnullptr)
 	void* (*get_param_data)(int index);
 
 	//--------------------------------
 
-	// �����̘A�z�z��v�f�𐮐��Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �L�[��(UTF-8)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数の連想配列要素を整数で取得する
+	// index		: 引数の位置(0～)
+	// key			: キー名(UTF-8)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	int (*get_param_table_int)(int index, LPCSTR key);
 
-	// �����̘A�z�z��v�f�𕂓������_�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �L�[��(UTF-8)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数の連想配列要素を浮動小数点で取得する
+	// index		: 引数の位置(0～)
+	// key			: キー名(UTF-8)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	double (*get_param_table_double)(int index, LPCSTR key);
 
-	// �����̘A�z�z��v�f�𕶎���(UTF-8)�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �L�[��(UTF-8)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��nullptr)
+	// 引数の連想配列要素を文字列(UTF-8)で取得する
+	// index		: 引数の位置(0～)
+	// key			: キー名(UTF-8)
+	// 戻り値		: 引数の値 (取得出来ない場合はnullptr)
 	LPCSTR(*get_param_table_string)(int index, LPCSTR key);
 
 	//--------------------------------
 
-	// �����̔z��v�f�̐����擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �z��v�f�̐�
+	// 引数の配列要素の数を取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 配列要素の数
 	int (*get_param_array_num)(int index);
 
-	// �����̔z��v�f�𐮐��Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �z��̃C���f�b�N�X(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数の配列要素を整数で取得する
+	// index		: 引数の位置(0～)
+	// key			: 配列のインデックス(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	int (*get_param_array_int)(int index, int key);
 
-	// �����̔z��v�f�𕂓������_�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �z��̃C���f�b�N�X(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��0)
+	// 引数の配列要素を浮動小数点で取得する
+	// index		: 引数の位置(0～)
+	// key			: 配列のインデックス(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合は0)
 	double (*get_param_array_double)(int index, int key);
 
-	// �����̔z��v�f�𕶎���(UTF-8)�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �z��̃C���f�b�N�X(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��nullptr)
+	// 引数の配列要素を文字列(UTF-8)で取得する
+	// index		: 引数の位置(0～)
+	// key			: 配列のインデックス(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合はnullptr)
 	LPCSTR(*get_param_array_string)(int index, int key);
 
 	//--------------------------------
 
-	// �����̖߂�l��ǉ�����
-	// value		: �߂�l
+	// 整数の戻り値を追加する
+	// value		: 戻り値
 	void (*push_result_int)(int value);
 
-	// ���������_�̖߂�l��ǉ�����
-	// value		: �߂�l
+	// 浮動小数点の戻り値を追加する
+	// value		: 戻り値
 	void (*push_result_double)(double value);
 
-	// ������(UTF-8)�̖߂�l��ǉ�����
-	// value		: �߂�l
+	// 文字列(UTF-8)の戻り値を追加する
+	// value		: 戻り値
 	void (*push_result_string)(LPCSTR value);
 
-	// �f�[�^�̃|�C���^�̖߂�l��ǉ�����
-	// value		: �߂�l
+	// データのポインタの戻り値を追加する
+	// value		: 戻り値
 	void (*push_result_data)(void* value);
 
 	//--------------------------------
 
-	// �����A�z�z��̖߂�l��ǉ�����
-	// key			: �L�[��(UTF-8)�̔z��
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 整数連想配列の戻り値を追加する
+	// key			: キー名(UTF-8)の配列
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_table_int)(LPCSTR* key, int* value, int num);
 
-	// ���������_�A�z�z��̖߂�l��ǉ�����
-	// key			: �L�[��(UTF-8)�̔z��
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 浮動小数点連想配列の戻り値を追加する
+	// key			: キー名(UTF-8)の配列
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_table_double)(LPCSTR* key, double* value, int num);
 
-	// ������(UTF-8)�A�z�z��̖߂�l��ǉ�����
-	// key			: �L�[��(UTF-8)�̔z��
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 文字列(UTF-8)連想配列の戻り値を追加する
+	// key			: キー名(UTF-8)の配列
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_table_string)(LPCSTR* key, LPCSTR* value, int num);
 
 	//--------------------------------
 
-	// �����z��̖߂�l��ǉ�����
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 整数配列の戻り値を追加する
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_array_int)(int* value, int num);
 
-	// ���������_�z��̖߂�l��ǉ�����
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 浮動小数点配列の戻り値を追加する
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_array_double)(double* value, int num);
 
-	// ������(UTF-8)�z��̖߂�l��ǉ�����
-	// value		: �߂�l�̔z��
-	// num			: �z��̗v�f��
+	// 文字列(UTF-8)配列の戻り値を追加する
+	// value		: 戻り値の配列
+	// num			: 配列の要素数
 	void (*push_result_array_string)(LPCSTR* value, int num);
 
 	//--------------------------------
 
-	// �G���[���b�Z�[�W��ݒ肷��
-	// �Ăяo���ꂽ�֐����G���[�I������ꍇ�ɐݒ肵�܂�
-	// message		: �G���[���b�Z�[�W(UTF-8)
+	// エラーメッセージを設定する
+	// 呼び出された関数をエラー終了する場合に設定します
+	// message		: エラーメッセージ(UTF-8)
 	void (*set_error)(LPCSTR message);
 
 	//--------------------------------
 
-	// �������u�[���l�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��false)
+	// 引数をブール値で取得する
+	// index		: 引数の位置(0～)
+	// 戻り値		: 引数の値 (取得出来ない場合はfalse)
 	bool (*get_param_boolean)(int index);
 
-	// �u�[���l�̖߂�l��ǉ�����
-	// value		: �߂�l
+	// ブール値の戻り値を追加する
+	// value		: 戻り値
 	void (*push_result_boolean)(bool value);
 
-	// �����̘A�z�z��v�f���u�[���l�Ŏ擾����
-	// index		: �����̈ʒu(0�`)
-	// key			: �L�[��(UTF-8)
-	// �߂�l		: �����̒l (�擾�o���Ȃ��ꍇ��false)
+	// 引数の連想配列要素をブール値で取得する
+	// index		: 引数の位置(0～)
+	// key			: キー名(UTF-8)
+	// 戻り値		: 引数の値 (取得出来ない場合はfalse)
 	bool (*get_param_table_boolean)(int index, LPCSTR key);
 
 };
 
 //----------------------------------------------------------------------------------
 
-// �X�N���v�g���W���[���֐���`�\����
+// スクリプトモジュール関数定義構造体
 struct SCRIPT_MODULE_FUNCTION {
-	LPCWSTR name;						// �֐���
-	void (*func)(SCRIPT_MODULE_PARAM*);	// �֐��ւ̃|�C���^
+	LPCWSTR name;						// 関数名
+	void (*func)(SCRIPT_MODULE_PARAM*);	// 関数へのポインタ
 };
 
-// �X�N���v�g���W���[���\����
+// スクリプトモジュール構造体
 struct SCRIPT_MODULE_TABLE {
-	LPCWSTR information;				// �X�N���v�g���W���[���̏��
-	SCRIPT_MODULE_FUNCTION* functions;	// �o�^����֐��̈ꗗ (SCRIPT_MODULE_FUNCTION��񋓂��Ċ֐�����null�̗v�f�ŏI�[�������X�g�ւ̃|�C���^)
+	LPCWSTR information;				// スクリプトモジュールの情報
+	SCRIPT_MODULE_FUNCTION* functions;	// 登録する関数の一覧 (SCRIPT_MODULE_FUNCTIONを列挙して関数名がnullの要素で終端したリストへのポインタ)
 };
+
 

@@ -12,3 +12,4 @@
 
 #define IDC_PRESET_COMBO  2001
 #define IDC_SAVE_PRESET   2002
+

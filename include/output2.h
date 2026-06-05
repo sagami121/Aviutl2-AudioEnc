@@ -1,94 +1,95 @@
-//----------------------------------------------------------------------------------
-//	�o�̓v���O�C�� �w�b�_�[�t�@�C�� for AviUtl ExEdit2
-//	By �j�d�m����
+﻿//----------------------------------------------------------------------------------
+//	出力プラグイン ヘッダーファイル for AviUtl ExEdit2
+//	By ＫＥＮくん
 //----------------------------------------------------------------------------------
 
-//	�o�̓v���O�C���͉��L�̊֐����O�����J����ƌĂяo����܂�
+//	出力プラグインは下記の関数を外部公開すると呼び出されます
 //
-//	�o�̓v���O�C���\���̂̃|�C���^��n���֐� (�K�{)
+//	出力プラグイン構造体のポインタを渡す関数 (必須)
 //		OUTPUT_PLUGIN_TABLE* GetOutputPluginTable(void)
 //
-//	�v���O�C��DLL�������֐� (�C��)
-//		bool InitializePlugin(DWORD version) ��version�͖{�̂̃o�[�W�����ԍ�
+//	プラグインDLL初期化関数 (任意)
+//		bool InitializePlugin(DWORD version) ※versionは本体のバージョン番号
 // 
-//	�v���O�C��DLL�I���֐� (�C��)
+//	プラグインDLL終了関数 (任意)
 //		void UninitializePlugin()
 // 
-//	���O�o�͋@�\�������֐� (�C��) ��logger2.h
+//	ログ出力機能初期化関数 (任意) ※logger2.h
 //		void InitializeLogger(LOG_HANDLE* logger)
 // 
-//	�ݒ�֘A�@�\�������֐� (�C��) ��config2.h
+//	設定関連機能初期化関数 (任意) ※config2.h
 //		void InitializeConfig(CONFIG_HANDLE* config)
 
 //----------------------------------------------------------------------------------
 
-// �o�͏��\����
+// 出力情報構造体
 struct OUTPUT_INFO {
-	int flag;			//	�t���O
-	static constexpr int FLAG_VIDEO = 1; // �摜�f�[�^����
-	static constexpr int FLAG_AUDIO = 2; // �摜�f�[�^����
-	int w, h;			//	�c���T�C�Y
-	int rate, scale;	//	�t���[�����[�g�A�X�P�[��
-	int n;				//	�t���[����
-	int audio_rate;		//	�����T���v�����O���[�g
-	int audio_ch;		//	�����`�����l����
-	int audio_n;		//	�����T���v�����O��
-	LPCWSTR savefile;	//	�Z�[�u�t�@�C�����ւ̃|�C���^
+	int flag;			//	フラグ
+	static constexpr int FLAG_VIDEO = 1; // 画像データあり
+	static constexpr int FLAG_AUDIO = 2; // 画像データあり
+	int w, h;			//	縦横サイズ
+	int rate, scale;	//	フレームレート、スケール
+	int n;				//	フレーム数
+	int audio_rate;		//	音声サンプリングレート
+	int audio_ch;		//	音声チャンネル数
+	int audio_n;		//	音声サンプリング数
+	LPCWSTR savefile;	//	セーブファイル名へのポインタ
 
-	// DIB�`���̉摜�f�[�^���擾���܂�
-	// frame	: �t���[���ԍ�
-	// format	: �摜�t�H�[�}�b�g
+	// DIB形式の画像データを取得します
+	// frame	: フレーム番号
+	// format	: 画像フォーマット
 	//			  0(BI_RGB) = RGB24bit / 'P''A''6''4' = PA64 / 'H''F''6''4' = HF64 / 'Y''U''Y''2' = YUY2 / 'Y''C''4''8' = YC48
-	// ��PA64��DXGI_FORMAT_R16G16B16A16_UNORM(��Z�ς݃�)�ł�
-	// ��HF64��DXGI_FORMAT_R16G16B16A16_FLOAT(��Z�ς݃�)�ł�(�����t�H�[�}�b�g)
-	// ��YC48�͌݊��Ή��̃t�H�[�}�b�g�ł�
-	// �߂�l	: �f�[�^�ւ̃|�C���^
-	//			  �摜�f�[�^�|�C���^�̓��e�͎��ɊO���֐����g�������C���ɏ�����߂��܂ŗL��
+	// ※PA64はDXGI_FORMAT_R16G16B16A16_UNORM(乗算済みα)です
+	// ※HF64はDXGI_FORMAT_R16G16B16A16_FLOAT(乗算済みα)です(内部フォーマット)
+	// ※YC48は互換対応のフォーマットです
+	// 戻り値	: データへのポインタ
+	//			  画像データポインタの内容は次に外部関数を使うかメインに処理を戻すまで有効
 	void* (*func_get_video)(int frame, DWORD format);
 
-	// PCM�`���̉����f�[�^�ւ̃|�C���^���擾���܂�
-	// start	: �J�n�T���v���ԍ�
-	// length	: �ǂݍ��ރT���v����
-	// readed	: �ǂݍ��܂ꂽ�T���v����
-	// format	: �����t�H�[�}�b�g
+	// PCM形式の音声データへのポインタを取得します
+	// start	: 開始サンプル番号
+	// length	: 読み込むサンプル数
+	// readed	: 読み込まれたサンプル数
+	// format	: 音声フォーマット
 	//			  1(WAVE_FORMAT_PCM) = PCM16bit / 3(WAVE_FORMAT_IEEE_FLOAT) = PCM(float)32bit
-	// �߂�l	: �f�[�^�ւ̃|�C���^
-	//			  �����f�[�^�|�C���^�̓��e�͎��ɊO���֐����g�������C���ɏ�����߂��܂ŗL��
+	// 戻り値	: データへのポインタ
+	//			  音声データポインタの内容は次に外部関数を使うかメインに処理を戻すまで有効
 	void* (*func_get_audio)(int start, int length, int* readed, DWORD format);
 
-	// ���f���邩���ׂ܂�
-	// �߂�l	: TRUE�Ȃ璆�f
+	// 中断するか調べます
+	// 戻り値	: TRUEなら中断
 	bool (*func_is_abort)();
 
-	// �c�莞�Ԃ�\�������܂�
-	// now		: �������Ă���t���[���ԍ�
-	// total	: �������鑍�t���[����
-	// �߂�l	: TRUE�Ȃ琬��
+	// 残り時間を表示させます
+	// now		: 処理しているフレーム番号
+	// total	: 処理する総フレーム数
+	// 戻り値	: TRUEなら成功
 	void (*func_rest_time_disp)(int now, int total);
 
-	// �f�[�^�擾�̃o�b�t�@��(�t���[����)��ݒ肵�܂� ���W����4�ɂȂ�܂�
-	// �o�b�t�@���̔����̃f�[�^���ǂ݃��N�G�X�g����悤�ɂȂ�܂�
-	// video	: �摜�f�[�^�̃o�b�t�@��
-	// audio	: �����f�[�^�̃o�b�t�@��
+	// データ取得のバッファ数(フレーム数)を設定します ※標準は4になります
+	// バッファ数の半分のデータを先読みリクエストするようになります
+	// video	: 画像データのバッファ数
+	// audio	: 音声データのバッファ数
 	void (*func_set_buffer_size)(int video_size, int audio_size);
 };
 
-// �o�̓v���O�C���\����
+// 出力プラグイン構造体
 struct OUTPUT_PLUGIN_TABLE {
-	int flag;				// �t���O �����g�p
-	static constexpr int FLAG_VIDEO = 1; //	�摜���T�|�[�g����
-	static constexpr int FLAG_AUDIO = 2; //	�������T�|�[�g����
-	LPCWSTR name;			// �v���O�C���̖��O
-	LPCWSTR filefilter;		// �t�@�C���̃t�B���^
-	LPCWSTR information;	// �v���O�C���̏��
+	int flag;				// フラグ ※未使用
+	static constexpr int FLAG_VIDEO = 1; //	画像をサポートする
+	static constexpr int FLAG_AUDIO = 2; //	音声をサポートする
+	LPCWSTR name;			// プラグインの名前
+	LPCWSTR filefilter;		// ファイルのフィルタ
+	LPCWSTR information;	// プラグインの情報
 
-	// �o�͎��ɌĂ΂��֐��ւ̃|�C���^
+	// 出力時に呼ばれる関数へのポインタ
 	bool (*func_output)(OUTPUT_INFO* oip);
 
-	// �o�͐ݒ�̃_�C�A���O��v�����ꂽ���ɌĂ΂��֐��ւ̃|�C���^ (nullptr�Ȃ�Ă΂�܂���)
+	// 出力設定のダイアログを要求された時に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
 	bool (*func_config)(HWND hwnd, HINSTANCE dll_hinst);
 
-	// �o�͐ݒ�̃e�L�X�g�����擾���鎞�ɌĂ΂��֐��ւ̃|�C���^ (nullptr�Ȃ�Ă΂�܂���)
-	// �߂�l	: �o�͐ݒ�̃e�L�X�g���(���Ɋ֐����Ă΂��܂œ��e��L���ɂ��Ă���)
+	// 出力設定のテキスト情報を取得する時に呼ばれる関数へのポインタ (nullptrなら呼ばれません)
+	// 戻り値	: 出力設定のテキスト情報(次に関数が呼ばれるまで内容を有効にしておく)
 	LPCWSTR(*func_get_config_text)();
 };
+
