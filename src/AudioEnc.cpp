@@ -29,7 +29,7 @@ namespace {
     HINSTANCE g_module = nullptr;
 	std::wstring g_iniPath;
 
-	const wchar_t* INFO_STR = L"AudioEnc v1.4";
+	const wchar_t* INFO_STR = L"AudioEnc v1.5";
 	const wchar_t* PLUGIN_NAME = L"音声出力";
 
 	const wchar_t* FILE_FILTER =
